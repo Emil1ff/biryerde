@@ -189,7 +189,7 @@ const BookingCard: React.FC<{ item: Booking }> = ({ item }) => {
             </TouchableOpacity>
             <TouchableOpacity style={styles.rescheduleButton}>
               <LinearGradient
-                colors={['#8B5CF6', '#A855F7']} // Purple gradient
+                colors={['#8B5CF6', '#A855F7']} 
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.rescheduleButtonGradient}

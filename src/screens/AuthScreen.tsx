@@ -29,7 +29,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ navigation, route }) => {
 
   React.useEffect(() => {
     GoogleSignin.configure({
-      webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', // Replace with your Google webClientId
+      webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', 
     });
   }, []);
 

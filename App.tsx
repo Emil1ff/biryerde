@@ -12,7 +12,6 @@ import FillProfileScreen from "./src/screens/FillProfileScreen"
 import CreatePINScreen from "./src/screens/CreatePINScreen"
 import SetFingerprintScreen from "./src/screens/SetFingerprintScreen"
 import type { RootStackParamList } from "./src/types/navigation"
-
 import SearchScreen from "./src/screens/SearchScreen" 
 import NotificationsScreen from "./src/tabs/subtabs/Notification" 
 import MostPopularServicesScreen from "./src/tabs/subtabs/MostPopularServices"
