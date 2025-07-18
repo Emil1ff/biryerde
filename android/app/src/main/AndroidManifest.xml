@@ -12,8 +12,12 @@
   <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
   <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
   <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.RECORD_AUDIO" />
+  <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    android:maxSdkVersion="28" />
+
 
   <application
     android:name=".MainApplication"
@@ -23,6 +27,9 @@
     android:allowBackup="false"
     android:theme="@style/AppTheme"
     android:supportsRtl="true">
+    <meta-data
+      android:name="com.google.android.geo.API_KEY"
+      android:value="AIzaSyAvxZVp_lb_tYYAuavfL3Ket-PL7sB-kds" />
     <activity
       android:name=".MainActivity"
       android:label="@string/app_name"

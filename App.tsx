@@ -34,6 +34,8 @@ import HelpCenter from "./src/tabs/subtabs/HelpCenter"
 import CustomerService from "./src/tabs/subtabs/CustomerService"
 import Contact from "./src/tabs/subtabs/Contact"
 import Call from "./src/tabs/subtabs/Call"
+import ChatScreen from "./src/tabs/subtabs/Chat"
+import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen"
 
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -42,7 +44,7 @@ const App: React.FC = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Splash"
+        initialRouteName="Chat"
         screenOptions={{
           headerShown: false,
           presentation: "card",
@@ -52,8 +54,8 @@ const App: React.FC = () => {
           }),
         }}
       >
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen name="Onboarding" component={OnboardingContainer} />
+        {/* <Stack.Screen name="Splash" component={SplashScreen} /> */}
+        {/* <Stack.Screen name="Onboarding" component={OnboardingContainer} />
         <Stack.Screen name="Auth" component={AuthScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
@@ -69,7 +71,6 @@ const App: React.FC = () => {
         <Stack.Screen name="AllServices" component={AllServices} />
         <Stack.Screen name="ServiceListByCategory" component={ServiceListByCategoryScreen} />
         <Stack.Screen name="ServiceDetail" component={ServiceDetailScreen} />
-        <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
         <Stack.Screen name="EditProfile" component={EditProfile} />
         <Stack.Screen name="NotificationSettings" component={NotificationSettings} />
         <Stack.Screen name="Payment" component={Payment} />
@@ -82,6 +83,9 @@ const App: React.FC = () => {
         <Stack.Screen name="Contact" component={Contact} />
         <Stack.Screen name="CustomerServiceChat" component={CustomerService} />
         <Stack.Screen name="CallScreen" component={Call} />
+        <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen}/> */}
+        <Stack.Screen name="Chat" component={ChatScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   )

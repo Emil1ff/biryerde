@@ -1,7 +1,8 @@
 "use client"
 
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Switch } from "react-native"
 import Icon from "react-native-vector-icons/Ionicons"
 
@@ -66,6 +67,20 @@ const Security: React.FC<any> = ({ navigation }) => {
       onPress: () => console.log("Navigate to Change Password screen"),
     },
   ]
+
+  useEffect(() => {
+  const loadSettings = async () => {
+    const bio = await AsyncStorage.getItem('biometricAuthEnabled');
+    const face = await AsyncStorage.getItem('faceIdEnabled');
+    const remember = await AsyncStorage.getItem('rememberMe');
+
+    setBiometricId(bio === 'true');
+    setFaceId(face === 'true');
+    setRememberMe(remember === 'true');
+  };
+
+  loadSettings();
+}, []);
 
   const renderSecurityOption = (option: SecurityOption) => (
     <TouchableOpacity key={option.id} style={styles.optionItem} onPress={option.onPress} activeOpacity={0.7}>

@@ -33,6 +33,8 @@ export type RootStackParamList = {
   CustomerServiceChat: undefined
   Filter: undefined
   CallScreen: { contactName: string; contactImage: string }
+  Chat:undefined;
+  ForgotPassword: undefined;
 }
 
 export type BottomTabParamList = {
@@ -51,8 +53,8 @@ export type SignUpScreenProps = NativeStackScreenProps<RootStackParamList, "Sign
 export type FillProfileScreenProps = NativeStackScreenProps<RootStackParamList, "FillProfile">
 export type CreatePINScreenProps = NativeStackScreenProps<RootStackParamList, "CreatePIN">
 export type SetFingerprintScreenProps = NativeStackScreenProps<RootStackParamList, "SetFingerprint">
-export type ServiceListByCategoryScreenProps = NativeStackScreenProps<RootStackParamList, "ServiceListByCategory"> // Updated type
-export type ServiceDetailScreenProps = NativeStackScreenProps<RootStackParamList, "ServiceDetail"> // New type
+export type ServiceListByCategoryScreenProps = NativeStackScreenProps<RootStackParamList, "ServiceListByCategory">
+export type ServiceDetailScreenProps = NativeStackScreenProps<RootStackParamList, "ServiceDetail"> 
 export type BookmarkScreenProps = NativeStackScreenProps<RootStackParamList, "Bookmark">
 export type SpecialOffersScreenProps = NativeStackScreenProps<RootStackParamList, "SpecialOffers">
 export type NotificationScreenProps = NativeStackScreenProps<RootStackParamList, "Notification">
@@ -68,6 +70,8 @@ export type HelpCenterFAQScreenProps = NativeStackScreenProps<RootStackParamList
 export type ContactScreenProps = NativeStackScreenProps<RootStackParamList, "Contact">
 export type CustomerServiceChatScreenProps = NativeStackScreenProps<RootStackParamList, "CustomerServiceChat">
 export type CallScreenProps = NativeStackScreenProps<RootStackParamList, "CallScreen">
+export type ChatScreenProps = NativeStackScreenProps<RootStackParamList, "Chat">
+export type ForgotPasswordScreenProps = NativeStackScreenProps<RootStackParamList, "ForgotPassword">
 
 export type SearchScreenProps = NativeStackScreenProps<RootStackParamList, "Search">
 export type HomeScreenProps = BottomTabScreenProps<BottomTabParamList, "HomeTab">

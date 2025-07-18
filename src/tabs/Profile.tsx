@@ -4,16 +4,16 @@ import type React from "react"
 import { useState } from "react"
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Image, Switch, Alert } from "react-native"
 import LinearGradient from "react-native-linear-gradient"
-import Icon from "react-native-vector-icons/Ionicons" // Using Ionicons as per the image
+import Icon from "react-native-vector-icons/Ionicons" 
 
 interface ProfileOption {
   id: string
   title: string
-  icon: string // Icon name from Ionicons
+  icon: string 
   type: "navigation" | "switch" | "action"
   value?: boolean
   onPress?: () => void
-  rightText?: string // For Language option
+  rightText?: string 
 }
 
 const ProfileScreen: React.FC<any> = ({ navigation }) => {
@@ -25,7 +25,7 @@ const ProfileScreen: React.FC<any> = ({ navigation }) => {
     email: "andrew_ainsley@yourdomain.com",
     profileImage:
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/148380a44d57cc7efcc92023de6ed6d5007efe99.jpg-Ee3F4IckYQTXlqw16FxK7RHE7XJlR9.jpeg",
-    memberSince: "December 2023", // Example stat
+    memberSince: "December 2023",
     completedBookings: 24,
     rating: 4.8,
   }
@@ -43,7 +43,7 @@ const ProfileScreen: React.FC<any> = ({ navigation }) => {
       title: "Notification",
       icon: "notifications-outline",
       type: "navigation",
-      onPress: () => navigation.navigate("NotificationSettings"), // Changed to NotificationSettings
+      onPress: () => navigation.navigate("NotificationSettings"), 
     },
     {
       id: "3",

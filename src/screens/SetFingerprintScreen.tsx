@@ -8,17 +8,23 @@ import {
   Animated,
   Alert,
   Platform,
+  Linking,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import ReactNativeBiometrics, { BiometryTypes } from 'react-native-biometrics';
 import { SetFingerprintScreenProps } from '../types/navigation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
-// Initialize with proper configuration
 const rnBiometrics = new ReactNativeBiometrics({
   allowDeviceCredentials: true,
 });
 
-const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation }) => {
+const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({
+  navigation,
+}) => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [biometryType, setBiometryType] = useState<BiometryTypes | null>(null);
@@ -43,7 +49,7 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
           duration: 1000,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
     if (isScanning) {
       pulseAnimation.start();
@@ -56,23 +62,27 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
 
   const checkBiometricAvailability = async () => {
     try {
-      console.log('Checking biometric availability...');
-      const { available, biometryType } = await rnBiometrics.isSensorAvailable();
-      
-      console.log('Biometric check result:', { available, biometryType });
-      
-      setIsBiometricAvailable(available);
-      setBiometryType(biometryType);
-      
-      if (!available) {
+      const result = await rnBiometrics.isSensorAvailable();
+
+      console.log('Biometric availability result:', result);
+
+      const isAvailable =
+        result.available === true && result.biometryType !== null;
+
+      setIsBiometricAvailable(isAvailable);
+      setBiometryType(result.biometryType);
+
+      if (!isAvailable) {
         Alert.alert(
           'Biometric Not Available',
-          'Your device does not support biometric authentication or it is not set up. Please ensure you have enrolled biometrics in your device settings.',
+          'Your device does not support biometric authentication or it is not set up. Please enable Face ID / Touch ID / Fingerprint in device settings.',
           [
             {
-              text: 'Open Settings',
+              text: Platform.OS === 'ios' ? 'Settings' : 'OK',
               onPress: () => {
-                console.log('Open device settings');
+                if (Platform.OS === 'ios') {
+                  Linking.openURL('App-Prefs:');
+                }
               },
             },
             {
@@ -80,15 +90,17 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
               onPress: () => navigation.navigate('MainTabs'),
               style: 'cancel',
             },
-          ]
+          ],
         );
       }
     } catch (error) {
-      console.error('Biometric check error:', error);
+      console.error('isSensorAvailable error:', error);
       setIsBiometricAvailable(false);
+      setBiometryType(null);
+
       Alert.alert(
-        'Error',
-        'Failed to check biometric availability. Please try again.',
+        'Biometric Error',
+        'Could not check biometric availability. Try again or skip.',
         [
           {
             text: 'Retry',
@@ -99,7 +111,7 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
             onPress: () => navigation.navigate('MainTabs'),
             style: 'cancel',
           },
-        ]
+        ],
       );
     }
   };
@@ -110,21 +122,18 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
       return;
     }
 
-    console.log('Starting biometric authentication...');
     setIsScanning(true);
     setScanProgress(0);
     progressAnim.setValue(0);
 
-    // Start progress animation
     Animated.timing(progressAnim, {
       toValue: 1,
-      duration: 3000, // Increased duration
+      duration: 3000,
       useNativeDriver: false,
     }).start();
 
-    // Simulate progress updates
     const progressInterval = setInterval(() => {
-      setScanProgress((prev) => {
+      setScanProgress(prev => {
         if (prev >= 90) {
           clearInterval(progressInterval);
           return 90;
@@ -135,103 +144,45 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
 
     try {
       const biometricPrompt = getBiometricPromptMessage();
-      
-      console.log('Showing biometric prompt:', biometricPrompt.message);
-      
-      // Use createSignature for better reliability
-      const { success, signature, error } = await rnBiometrics.createSignature({
+
+      const { success } = await rnBiometrics.simplePrompt({
         promptMessage: biometricPrompt.message,
-        payload: 'biometric_setup_' + Date.now(), // Add unique payload
         cancelButtonText: 'Cancel',
       });
 
       clearInterval(progressInterval);
-      
-      console.log('Biometric result:', { success, error });
 
-      if (success && signature) {
-        // Authentication successful
+      if (success) {
         setScanProgress(100);
-        
-        // Save biometric preference
         await saveBiometricPreference(true);
-        
+
         setTimeout(() => {
           setIsScanning(false);
-          Alert.alert(
-            'Success!',
-            'Biometric authentication has been set up successfully.',
-            [
-              {
-                text: 'Continue',
-                onPress: () => navigation.navigate('MainTabs'),
-              },
-            ]
-          );
+          Alert.alert('Success', 'Biometric authentication enabled.', [
+            {
+              text: 'Continue',
+              onPress: () => navigation.navigate('MainTabs'),
+            },
+          ]);
         }, 1000);
       } else {
-        // Authentication failed or cancelled
-        setIsScanning(false);
-        setScanProgress(0);
-        progressAnim.setValue(0);
-        
-        if (error && !error.includes('cancelled') && !error.includes('canceled')) {
-          Alert.alert(
-            'Authentication Failed',
-            `Biometric authentication failed: ${error}`,
-            [
-              {
-                text: 'Try Again',
-                onPress: () => handleBiometricAuth(),
-              },
-              {
-                text: 'Skip',
-                onPress: () => navigation.navigate('MainTabs'),
-                style: 'cancel',
-              },
-            ]
-          );
-        } else if (error && (error.includes('cancelled') || error.includes('canceled'))) {
-          // User cancelled, just reset state
-          console.log('User cancelled biometric authentication');
-        }
+        throw new Error('Authentication failed or cancelled');
       }
     } catch (error) {
+      console.log('Biometric auth error:', error);
       clearInterval(progressInterval);
       setIsScanning(false);
       setScanProgress(0);
       progressAnim.setValue(0);
-      
-      console.error('Biometric authentication error:', error);
-      
-      let errorMessage = 'An error occurred during biometric authentication.';
-      
-      // Handle specific error cases
-      if (error.message) {
-        if (error.message.includes('not enrolled')) {
-          errorMessage = 'No biometrics enrolled. Please set up biometrics in your device settings first.';
-        } else if (error.message.includes('not available')) {
-          errorMessage = 'Biometric authentication is not available on this device.';
-        } else if (error.message.includes('permission')) {
-          errorMessage = 'Permission denied for biometric authentication.';
-        }
-      }
-      
-      Alert.alert(
-        'Error',
-        errorMessage,
-        [
-          {
-            text: 'Try Again',
-            onPress: () => handleBiometricAuth(),
-          },
-          {
-            text: 'Skip',
-            onPress: () => navigation.navigate('MainTabs'),
-            style: 'cancel',
-          },
-        ]
-      );
+
+      Alert.alert('Failed', 'Biometric authentication failed.', [
+        { text: 'Try Again', onPress: () => handleBiometricAuth() },
+        {
+          text: 'Skip',
+          onPress: () => navigation.navigate('MainTabs'),
+          style: 'cancel',
+        },
+      ]);
     }
   };
 
@@ -239,35 +190,39 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
     switch (biometryType) {
       case BiometryTypes.TouchID:
         return {
-          message: 'Place your finger on the Touch ID sensor to set up biometric authentication',
-          icon: '👆',
+          message:
+            'Place your finger on the Touch ID sensor to set up biometric authentication',
+          icon: (
+            <MaterialCommunityIcons name="fingerprint" size={50} color="#fff" />
+          ),
           title: 'Touch ID',
         };
       case BiometryTypes.FaceID:
         return {
           message: 'Look at the front camera to set up Face ID authentication',
-          icon: '👤',
+          icon: <Ionicons name="ios-happy-outline" size={50} color="#fff" />,
           title: 'Face ID',
         };
       case BiometryTypes.Biometrics:
         return {
           message: 'Use your biometric sensor to set up authentication',
-          icon: '🔐',
-          title: 'Biometric',
+          icon: <FontAwesome5 name="unlock-alt" size={50} color="#fff" />,
+          title: 'finger-print-sharp',
         };
       default:
         return {
           message: 'Use your device biometric to set up authentication',
-          icon: '👆',
-          title: 'Biometric',
+          icon: (
+            <MaterialCommunityIcons name="fingerprint" size={50} color="#fff" />
+          ),
+          title: 'finger-print-sharp',
         };
     }
   };
 
   const saveBiometricPreference = async (enabled: boolean) => {
     try {
-      // You can use AsyncStorage or your preferred storage method
-      // await AsyncStorage.setItem('biometricEnabled', JSON.stringify(enabled));
+      await AsyncStorage.setItem('biometricEnabled', JSON.stringify(enabled));
       console.log('Biometric preference saved:', enabled);
     } catch (error) {
       console.error('Error saving biometric preference:', error);
@@ -284,7 +239,7 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
 
   const renderBiometricIcon = () => {
     const biometricInfo = getBiometricPromptMessage();
-    
+
     if (scanProgress === 100) {
       return (
         <View style={styles.successContainer}>
@@ -313,7 +268,7 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
         >
           <Text style={styles.fingerprintIconText}>{biometricInfo.icon}</Text>
         </LinearGradient>
-        
+
         {isScanning && (
           <>
             <View style={[styles.scanRing, styles.scanRing1]} />
@@ -369,10 +324,7 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={handleBackPress}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
             <Text style={styles.backButtonText}>←</Text>
           </TouchableOpacity>
           <Text style={styles.title}>{getBiometricTitle()}</Text>
@@ -380,15 +332,11 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
 
         {/* Description */}
         <View style={styles.descriptionContainer}>
-          <Text style={styles.description}>
-            {getBiometricDescription()}
-          </Text>
+          <Text style={styles.description}>{getBiometricDescription()}</Text>
         </View>
 
         {/* Biometric Icon */}
-        <View style={styles.iconContainer}>
-          {renderBiometricIcon()}
-        </View>
+        <View style={styles.iconContainer}>{renderBiometricIcon()}</View>
 
         {/* Progress Text */}
         {isScanning && (
@@ -396,10 +344,9 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
             <Text style={styles.progressText}>
               {scanProgress < 100
                 ? `Authenticating... ${scanProgress}%`
-                : 'Biometric authentication set up successfully!'
-              }
+                : 'Biometric authentication set up successfully!'}
             </Text>
-            
+
             {/* Progress Bar */}
             <View style={styles.progressBarContainer}>
               <Animated.View
@@ -418,19 +365,14 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
         )}
 
         {!isScanning && scanProgress === 0 && (
-          <Text style={styles.instructionText}>
-            {getInstructionText()}
-          </Text>
+          <Text style={styles.instructionText}>{getInstructionText()}</Text>
         )}
 
         {/* Buttons */}
         <View style={styles.buttonsContainer}>
           {!isScanning && scanProgress === 0 && (
             <>
-              <TouchableOpacity
-                style={styles.skipButton}
-                onPress={handleSkip}
-              >
+              <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
                 <Text style={styles.skipButtonText}>Skip</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -439,13 +381,19 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
                 disabled={!isBiometricAvailable}
               >
                 <LinearGradient
-                  colors={isBiometricAvailable ? ['#8B5CF6', '#A855F7'] : ['rgba(139, 92, 246, 0.3)', 'rgba(168, 85, 247, 0.3)']}
+                  colors={
+                    isBiometricAvailable
+                      ? ['#8B5CF6', '#A855F7']
+                      : ['rgba(139, 92, 246, 0.3)', 'rgba(168, 85, 247, 0.3)']
+                  }
                   style={styles.continueButton}
                 >
-                  <Text style={[
-                    styles.continueButtonText,
-                    !isBiometricAvailable && styles.disabledButtonText
-                  ]}>
+                  <Text
+                    style={[
+                      styles.continueButtonText,
+                      !isBiometricAvailable && styles.disabledButtonText,
+                    ]}
+                  >
                     Continue
                   </Text>
                 </LinearGradient>
@@ -458,7 +406,6 @@ const SetFingerprintScreen: React.FC<SetFingerprintScreenProps> = ({ navigation 
   );
 };
 
-// Styles remain the same
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -471,8 +418,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
     marginBottom: 40,
+    marginTop:30,
+    paddingTop:30,
   },
   backButton: {
     width: 40,

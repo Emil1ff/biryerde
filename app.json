@@ -1,4 +1,11 @@
 {
   "name": "usta",
-  "displayName": "usta"
+  "displayName": "usta",
+  "android": {
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAvxZVp_lb_tYYAuavfL3Ket-PL7sB-kds"
+        }
+      }
+    }
 }

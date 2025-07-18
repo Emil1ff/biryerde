@@ -1,4 +1,6 @@
-import React from 'react';
+"use client"
+
+import React from "react"
 import {
   View,
   Text,
@@ -7,81 +9,89 @@ import {
   SafeAreaView,
   Image,
   Dimensions,
-  BackHandler,
-} from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
-import { useFocusEffect } from '@react-navigation/native';
+  ScrollView,
+  Alert,
+} from "react-native"
+import LinearGradient from "react-native-linear-gradient"
+import { useFocusEffect } from "@react-navigation/native"
+import Icon from "react-native-vector-icons/FontAwesome"
+import { GoogleSignin } from "@react-native-google-signin/google-signin"
+import { LoginManager, AccessToken } from "react-native-fbsdk-next"
+import AsyncStorage from "@react-native-async-storage/async-storage" // Import AsyncStorage
+import type { AuthScreenProps } from "@/types/navigation"
 
-import Icon from 'react-native-vector-icons/FontAwesome'; 
-import AppleIcon from 'react-native-vector-icons/Ionicons'; 
-
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
-// import appleAuth, {
-//   AppleAuthRequestScope,
-//   AppleAuthRequestOperation,
-// } from '@invertase/react-native-apple-authentication';
-import { AuthScreenProps } from '@/types/navigation';
+const { width, height } = Dimensions.get("window")
 
 const AuthScreen: React.FC<AuthScreenProps> = ({ navigation, route }) => {
-  const { width, height } = Dimensions.get('window');
-  const { fromOnboarding } = route.params || {};
+  const { fromOnboarding } = route.params || {}
 
   React.useEffect(() => {
     GoogleSignin.configure({
-      webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', 
-    });
-  }, []);
+      webClientId: "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com", // Replace with your actual web client ID
+    })
+  }, [])
 
   useFocusEffect(
     React.useCallback(() => {
+      // BackHandler logic is commented out in original, keeping it that way.
       // const onBackPress = () => {
       //   handleBackPress();
       //   return true;
       // };
-
       // const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
       // return () => subscription.remove();
-    }, [fromOnboarding])
-  );
+    }, [fromOnboarding]),
+  )
 
   const handleSignInWithPassword = () => {
-    navigation.navigate('Login');
-  };
+    navigation.navigate("Login")
+  }
 
   const handleSignUp = () => {
-    navigation.navigate('SignUp');
-  };
+    navigation.navigate("SignUp")
+  }
 
   // Facebook Login
   const handleFacebookLogin = async () => {
     try {
-      const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+      const result = await LoginManager.logInWithPermissions(["public_profile", "email"])
       if (result.isCancelled) {
-        console.log('User cancelled Facebook login');
+        console.log("User cancelled Facebook login")
+        Alert.alert("Login Cancelled", "You cancelled the Facebook login.")
       } else {
-        const data = await AccessToken.getCurrentAccessToken();
-        if (!data) throw new Error('Failed to get access token');
-        console.log('Facebook access token:', data.accessToken.toString());
+        const data = await AccessToken.getCurrentAccessToken()
+        if (!data) throw new Error("Failed to get access token")
+        console.log("Facebook access token:", data.accessToken.toString())
+        // Simulate storing user info locally
+        await AsyncStorage.setItem("userToken", data.accessToken.toString())
+        await AsyncStorage.setItem("authProvider", "facebook")
+        Alert.alert("Success", "Logged in with Facebook!")
+        navigation.navigate("MainTabs") // Navigate to main app after successful login
       }
     } catch (error) {
-      console.error('Facebook login error:', error);
+      console.error("Facebook login error:", error)
+      Alert.alert("Login Error", "Failed to log in with Facebook. Please try again.")
     }
-  };
+  }
 
   // Google Login
   const handleGoogleLogin = async () => {
     try {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      console.log('Google user info:', userInfo);
+      await GoogleSignin.hasPlayServices()
+      const userInfo = await GoogleSignin.signIn()
+      console.log("Google user info:", userInfo)
+      // Simulate storing user info locally
+      await AsyncStorage.setItem("userToken", userInfo.idToken || userInfo.accessToken || "")
+      await AsyncStorage.setItem("authProvider", "google")
+      Alert.alert("Success", "Logged in with Google!")
+      navigation.navigate("MainTabs") // Navigate to main app after successful login
     } catch (error) {
-      console.error('Google login error:', error);
+      console.error("Google login error:", error)
+      Alert.alert("Login Error", "Failed to log in with Google. Please try again.")
     }
-  };
+  }
 
-  // Apple Login
+  // Apple Login (kept commented out as per original)
   // const handleAppleLogin = async () => {
   //   try {
   //     const appleAuthRequestResponse = await appleAuth.performRequest({
@@ -94,171 +104,152 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ navigation, route }) => {
   //   }
   // };
 
-  // const handleBackPress = () => {
-  //   if (fromOnboarding) {
-  //     navigation.goBack();
-  //   } else {
-  //     navigation.navigate('Onboarding');
-  //   }
-  // };
-
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.illustrationContainer}>
-          <View style={styles.illustration}>
-            <Image
-              source={require('../assets/images/auth/auth.png')}
-              style={styles.image}
-              resizeMode="contain"
-            />
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.content}>
+          <View style={styles.illustrationContainer}>
+            <Image source={require("../assets/images/auth/auth.png")} style={styles.image} resizeMode="contain" />
+          </View>
+          <Text style={styles.title}>Let's you in</Text>
+          <View style={styles.socialButtonsContainer}>
+            <TouchableOpacity style={styles.socialButton} onPress={handleFacebookLogin}>
+              <Icon name="facebook" size={width * 0.05} color="#3b5998" style={styles.socialIcon} />
+              <Text style={styles.socialButtonText}>Continue with Facebook</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.socialButton} onPress={handleGoogleLogin}>
+              <Icon name="google" size={width * 0.05} color="#db4437" style={styles.socialIcon} />
+              <Text style={styles.socialButtonText}>Continue with Google</Text>
+            </TouchableOpacity>
+            {/* Apple Login Button (kept commented out) */}
+            {/* <TouchableOpacity style={styles.socialButton} onPress={handleAppleLogin}>
+              <AppleIcon name="logo-apple" size={width * 0.05} color="#000000" style={styles.socialIcon} />
+              <Text style={styles.socialButtonText}>Continue with Apple</Text>
+            </TouchableOpacity> */}
+          </View>
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+          <TouchableOpacity style={styles.passwordButtonContainer} onPress={handleSignInWithPassword}>
+            <LinearGradient colors={["#8B5CF6", "#A855F7"]} style={styles.passwordButton}>
+              <Text style={styles.passwordButtonText}>Sign in with password</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          <View style={styles.signUpContainer}>
+            <Text style={styles.signUpText}>Don't have an account? </Text>
+            <TouchableOpacity onPress={handleSignUp}>
+              <Text style={styles.signUpLink}>Sign up</Text>
+            </TouchableOpacity>
           </View>
         </View>
-
-        <Text style={styles.title}>Let's you in</Text>
-
-        <View style={styles.socialButtonsContainer}>
-          <TouchableOpacity style={styles.socialButton} onPress={handleFacebookLogin}>
-            <Icon name="facebook" size={20} color="#3b5998" style={styles.socialIcon} />
-            <Text style={styles.socialButtonText}>Continue with Facebook</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.socialButton} onPress={handleGoogleLogin}>
-            <Icon name="google" size={20} color="#db4437" style={styles.socialIcon} />
-            <Text style={styles.socialButtonText}>Continue with Google</Text>
-          </TouchableOpacity>
-
-          {/* <TouchableOpacity style={styles.socialButton} onPress={handleAppleLogin}>
-            <AppleIcon name="logo-apple" size={20} color="#000000" style={styles.socialIcon} />
-            <Text style={styles.socialButtonText}>Continue with Apple</Text>
-          </TouchableOpacity> */}
-        </View>
-
-        <View style={styles.dividerContainer}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <TouchableOpacity style={styles.passwordButtonContainer} onPress={handleSignInWithPassword}>
-          <LinearGradient colors={['#8B5CF6', '#A855F7']} style={styles.passwordButton}>
-            <Text style={styles.passwordButtonText}>Sign in with password</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        <View style={styles.signUpContainer}>
-          <Text style={styles.signUpText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={handleSignUp}>
-            <Text style={styles.signUpLink}>Sign up</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
-    paddingTop: 60,
+    backgroundColor: "#000000", 
   },
-  image: {
-    width: Dimensions.get('window').width * .7,
-    height: Dimensions.get('window').height * .3,
-    marginBottom: 30,
+  scrollViewContent: {
+    flexGrow: 1, 
+    justifyContent: "center", 
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    marginTop: 50,
+    paddingHorizontal: width * 0.05, 
+    paddingTop: height * 0.05, 
+    paddingBottom: height * 0.03, 
   },
   illustrationContainer: {
-    alignItems: 'center',
-    marginVertical: 40,
+    alignItems: "center",
+    marginVertical: height * 0.04,
   },
-  illustration: {
-    width: 120,
-    height: 120,
-    justifyContent: 'center',
-    alignItems: 'center',
+  image: {
+    width: width * 0.7, 
+    height: height * 0.3, // Responsive height
+    marginBottom: height * 0.03, // Responsive margin
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 40,
+    fontSize: width * 0.08, // Responsive font size
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    textAlign: "center",
+    marginBottom: height * 0.05, // Responsive margin
   },
   socialButtonsContainer: {
-    marginBottom: 30,
+    marginBottom: height * 0.035, // Responsive margin
   },
   socialButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, .1)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    marginBottom: 16,
+    paddingVertical: height * 0.02, // Responsive padding
+    paddingHorizontal: width * 0.05, // Responsive padding
+    marginBottom: height * 0.02, // Responsive margin
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, .2)',
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
   socialIcon: {
-    marginRight: 16,
-    width: 24,
-    textAlign: 'center',
+    marginRight: width * 0.04, // Responsive margin
+    width: width * 0.06, 
+    textAlign: "center",
   },
   socialButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
+    color: "#FFFFFF",
+    fontSize: width * 0.04, // Responsive font size
+    fontWeight: "500",
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
   },
   dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 30,
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: height * 0.035, // Responsive margin
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, .2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
   },
   dividerText: {
-    color: 'rgba(255, 255, 255, .6)',
-    marginHorizontal: 16,
-    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.6)",
+    marginHorizontal: width * 0.04, // Responsive margin
+    fontSize: width * 0.035, // Responsive font size
   },
   passwordButtonContainer: {
-    marginBottom: 30,
+    marginBottom: height * 0.035, // Responsive margin
   },
   passwordButton: {
-    height: 56,
+    height: height * 0.07, // Responsive height
     borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   passwordButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
+    color: "#FFFFFF",
+    fontSize: width * 0.045, // Responsive font size
+    fontWeight: "600",
   },
   signUpContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: height * 0.02, // Ensure some bottom padding
   },
   signUpText: {
-    color: 'rgba(255, 255, 255, .6)',
-    fontSize: 16,
+    color: "rgba(255, 255, 255, 0.6)",
+    fontSize: width * 0.04, // Responsive font size
   },
   signUpLink: {
-    color: '#8B5CF6',
-    fontSize: 16,
-    fontWeight: '600',
+    color: "#8B5CF6",
+    fontSize: width * 0.04, // Responsive font size
+    fontWeight: "600",
   },
-});
+})
 
-export default AuthScreen;
+export default AuthScreen

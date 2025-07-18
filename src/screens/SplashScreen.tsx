@@ -7,14 +7,25 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { SplashScreenProps } from '../types/navigation';
+import { useAuth } from '../contexts/useAuth';
+import { useNavigation } from '@react-navigation/native';
 
 const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
   const spinValue = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    console.log('SplashScreen mounted'); // Debug üçün
+  const { user } = useAuth();
+  const nav = useNavigation();
 
-    // Start spinner animation
+  useEffect(() => {
+    setTimeout(() => {
+      nav.navigate(user ? 'MainTabs' : 'SignUp');
+    }, 1000);
+  }, [user]);
+
+  useEffect(() => {
+    console.log('SplashScreen mounted'); 
+
+    
     const spinAnimation = Animated.loop(
       Animated.timing(spinValue, {
         toValue: 1,
@@ -25,13 +36,12 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
     spinAnimation.start();
 
     const timer = setTimeout(() => {
-      console.log('Navigating to Onboarding...'); // Debug üçün
+      console.log('Navigating to Onboarding...'); 
       navigation.replace('Onboarding');
     }, 3000);
 
-    // Cleanup function
     return () => {
-      console.log('SplashScreen cleanup'); // Debug üçün
+      console.log('SplashScreen cleanup'); 
       clearTimeout(timer);
       spinAnimation.stop();
     };
